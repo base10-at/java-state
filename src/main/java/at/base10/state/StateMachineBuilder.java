@@ -36,8 +36,8 @@ public class StateMachineBuilder<S> {
         return stateMachine;
     }
 
-    private static <S> void setInitialState(@NonNull Class<? extends S> initialState,
-                                            @NonNull StateMachineImpl<S> stateMachine) {
+    private static <S> void setInitialState(Class<? extends S> initialState,
+                                            StateMachineImpl<S> stateMachine) {
         stateMachine.currentState = stateMachine.states.get(initialState);
         if (stateMachine.currentState == null) {
             throw new IllegalArgumentException("State " + initialState + " not found");
@@ -71,6 +71,5 @@ public class StateMachineBuilder<S> {
         } else if (c.isSynthetic()) {
             throw new IllegalArgumentException("Invalid class (Synthetic) %s".formatted(c));
         }
-
     }
 }
