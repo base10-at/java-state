@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -66,14 +67,25 @@ class StateMachineTest {
 
     @Test
     public void testInvalidSetupWithNull() {
+        //noinspection DataFlowIssue
         assertEquals(
-                "initialState is null",
+                "initialState is marked non-null but is null",
                 assertThrows(NullPointerException.class,
                         () -> StateMachine.builder(AppState.class)
                                 .register(sm -> new StateSquare(new SquareFunction(), sm))
                                 .register(StateTransit::new)
                                 .register(sm -> new StateInc())
                                 .build(null)
+                ).getMessage()
+        );
+    }
+
+    @Test
+    public void testCreateBuilderWithWithNull() {
+        assertEquals(
+                "stateClass is marked non-null but is null",
+                assertThrows(NullPointerException.class,
+                        () -> StateMachine.builder((Class<AppState>) null)
                 ).getMessage()
         );
     }
@@ -130,21 +142,27 @@ class StateMachineTest {
 
     @Test
     public void testInvalidInitialState() {
-        assertThrows(IllegalArgumentException.class,
-                () -> StateMachine.builder(AppState.class)
-                        .register(sm -> new StateSquare(new SquareFunction(), sm))
-                        .register(sm -> new StateInc())
-                        .build(StateTransit.class));
+        assertThat(
+                assertThrows(IllegalArgumentException.class,
+                        () -> StateMachine.builder(AppState.class)
+                                .register(sm -> new StateSquare(new SquareFunction(), sm))
+                                .register(sm -> new StateInc())
+                                .build(StateTransit.class)).getMessage(),
+                Matchers.equalTo("State class at.base10.state.StateMachineTest$StateTransit not found")
+        );
     }
 
     @Test
     public void testInvalidTransitionState() {
-        assertThrows(IllegalArgumentException.class,
-                () -> StateMachine.builder(AppState.class)
-                        .register(sm -> new StateSquare(new SquareFunction(), sm))
-                        .register(sm -> new StateInc())
-                        .build(StateInc.class)
-                        .transition(StateTransit.class)
+        assertThat(
+                assertThrows(IllegalArgumentException.class,
+                        () -> StateMachine.builder(AppState.class)
+                                .register(sm -> new StateSquare(new SquareFunction(), sm))
+                                .register(sm -> new StateInc())
+                                .build(StateInc.class)
+                                .transition(StateTransit.class)
+                ).getMessage(),
+                Matchers.equalTo("State class at.base10.state.StateMachineTest$StateTransit not found")
         );
     }
 
@@ -167,10 +185,16 @@ class StateMachineTest {
 
         @BeforeEach
         public void setUp() {
+            //noinspection Convert2Lambda,Anonymous2MethodRef
             stateMachine = StateMachine.builder(AppState.class)
                     .register(Set.of(
                             sm -> new StateSquare(new SquareFunction(), sm),
-                            StateTransit::new
+                            new StateFactory<>() {
+                                @Override
+                                public AppState build(StateMachine<AppState> stateMachine) {
+                                    return new StateTransit(stateMachine);
+                                }
+                            }
                     )).register(
                             sm -> new StateInc()
                     ).build(StateTransit.class);
@@ -209,6 +233,18 @@ class StateMachineTest {
             assertInstanceOf(StateTransit.class, stateMachine.state());
             assertThrows(NullPointerException.class,
                     () -> stateMachine.transition(null));
+        }
+
+        @Test
+        public void test_states() {
+            assertEquals(
+                    Set.of(
+                            StateTransit.class,
+                            StateInc.class,
+                            StateSquare.class
+                    ),
+                    stateMachine.states().stream()
+                            .map(AppState::getClass).collect(Collectors.toSet()));
         }
     }
 }

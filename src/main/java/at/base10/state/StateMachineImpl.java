@@ -5,6 +5,7 @@ import lombok.experimental.PackagePrivate;
 import lombok.extern.log4j.Log4j2;
 
 import java.lang.reflect.Proxy;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -13,12 +14,12 @@ class StateMachineImpl<S> implements StateMachine<S> {
 
     private final Class<S> stateClass;
 
+    @PackageProtected
+    final Map<Class<? extends S>, S> states = new HashMap<>();
 
     @PackagePrivate
     S currentState;
 
-    @PackageProtected
-    final Map<Class<? extends S>, S> states = new HashMap<>();
 
     @PackageProtected
     StateMachineImpl(Class<S> stateClass) {
@@ -40,6 +41,11 @@ class StateMachineImpl<S> implements StateMachine<S> {
     @Override
     public S state() {
         return currentState;
+    }
+
+    @Override
+    public Collection<S> states() {
+        return states.values();
     }
 
     @Override

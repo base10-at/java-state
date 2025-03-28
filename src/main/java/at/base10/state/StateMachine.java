@@ -1,5 +1,7 @@
 package at.base10.state;
 
+import java.util.Collection;
+
 public interface StateMachine<S>  {
 
 
@@ -10,6 +12,8 @@ public interface StateMachine<S>  {
     StateMachine<S> transition(Class<? extends S> state);
 
     S state();
+
+    Collection<S> states();
 
     S asProxy();
 
