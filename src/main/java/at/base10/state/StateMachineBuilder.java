@@ -7,28 +7,54 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+/**
+ * A builder class for constructing instances of {@link StateMachine}.
+ *
+ * @param <S> the type representing the states in the state machine
+ */
 @Log4j2
 public class StateMachineBuilder<S> {
     final Collection<StateFactory<S>> statesBuilders = new ArrayList<>();
     final Class<S> stateClass;
-
+    /**
+     * Constructs a new StateMachineBuilder with the specified state class.
+     *
+     * @param stateClass the class type of the state
+     */
     public StateMachineBuilder(@NonNull Class<S> stateClass) {
         this.stateClass = stateClass;
     }
-
-    public StateMachineBuilder<S> register(StateFactory<S> stateBuilder) {
-        if (stateBuilder == null) {
-            throw new NullPointerException("stateBuilder is null");
-        }
+    /**
+     * Registers a new state factory in the state machine builder.
+     *
+     * @param stateBuilder the state factory to register
+     * @return this builder instance
+     * @throws NullPointerException if {@code stateBuilder} is null
+     */
+    public StateMachineBuilder<S> register(@NonNull StateFactory<S> stateBuilder) {
         statesBuilders.add(stateBuilder);
         return this;
     }
 
-    public StateMachineBuilder<S> register(Collection<StateFactory<S>> stateBuilders) {
+    /**
+     * Registers multiple state factories in the state machine builder.
+     *
+     * @param stateBuilders the collection of state factories to register
+     * @return this builder instance
+     * @throws NullPointerException if an element is null
+     * @throws NullPointerException if {@code stateBuilder} is null
+     */
+    public StateMachineBuilder<S> register(@NonNull Collection<StateFactory<S>> stateBuilders) {
         stateBuilders.forEach(this::register);
         return this;
     }
 
+    /**
+     * Builds a new state machine with the specified initial state.
+     *
+     * @param initialState the class of the initial state
+     * @return the constructed {@link StateMachine} instance
+     */
     public StateMachine<S> build(@NonNull Class<? extends S> initialState) {
         StateMachineImpl<S> stateMachine = new StateMachineImpl<>(stateClass);
         registerStates(stateMachine, buildStates(stateMachine));

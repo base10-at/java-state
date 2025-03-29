@@ -9,23 +9,27 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * {@inheritDoc}
+ */
 @Log4j2
 class StateMachineImpl<S> implements StateMachine<S> {
 
     private final Class<S> stateClass;
 
-    @PackageProtected
     final Map<Class<? extends S>, S> states = new HashMap<>();
 
     @PackagePrivate
     S currentState;
 
 
-    @PackageProtected
     StateMachineImpl(Class<S> stateClass) {
         this.stateClass = stateClass;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public StateMachine<S> transition(@NonNull Class<? extends S> state) {
         var previousState = currentState;
@@ -38,21 +42,33 @@ class StateMachineImpl<S> implements StateMachine<S> {
         return this;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public S state() {
         return currentState;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Collection<S> states() {
         return states.values();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public S asProxy() {
         return asProxy(stateClass);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public <E> E asProxy(Class<E> state) {
         //noinspection unchecked

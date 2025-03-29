@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -122,11 +123,26 @@ class StateMachineTest {
 
     @Test
     public void testRegisterNull() {
-        assertEquals("stateBuilder is null",
+        //noinspection DataFlowIssue
+        assertEquals("stateBuilder is marked non-null but is null",
                 assertThrows(
                         NullPointerException.class,
                         () -> StateMachine.builder(AppState.class)
                                 .register((StateFactory<AppState>) null)
+                ).getMessage()
+        );
+
+    }
+
+    @Test
+    public void testRegisterNullElement() {
+        var list = new ArrayList<StateFactory<AppState>>();
+        list.add(null);
+
+        assertEquals("stateBuilder is marked non-null but is null",
+                assertThrows(
+                        NullPointerException.class,
+                        () -> StateMachine.builder(AppState.class).register(list)
                 ).getMessage()
         );
 
