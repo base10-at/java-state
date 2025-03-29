@@ -170,7 +170,7 @@
                 <version>${maven-javadoc-plugin.version}</version>
                 <configuration>
                     <failOnError>true</failOnError>
-<!--                    <failOnWarnings>true</failOnWarnings>-->
+                    <failOnWarnings>true</failOnWarnings>
                 </configuration>
                 <executions>
                     <execution>
