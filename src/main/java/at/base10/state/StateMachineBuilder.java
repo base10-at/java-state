@@ -6,6 +6,8 @@ import lombok.extern.log4j.Log4j2;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * A builder class for constructing instances of {@link StateMachine}.
@@ -16,6 +18,7 @@ import java.util.List;
 public class StateMachineBuilder<S> {
     final Collection<StateFactory<S>> statesBuilders = new ArrayList<>();
     final Class<S> stateClass;
+
     /**
      * Constructs a new StateMachineBuilder with the specified state class.
      *
@@ -24,6 +27,7 @@ public class StateMachineBuilder<S> {
     public StateMachineBuilder(@NonNull Class<S> stateClass) {
         this.stateClass = stateClass;
     }
+
     /**
      * Registers a new state factory in the state machine builder.
      *
@@ -57,7 +61,8 @@ public class StateMachineBuilder<S> {
      */
     public StateMachine<S> build(@NonNull Class<? extends S> initialState) {
         StateMachineImpl<S> stateMachine = new StateMachineImpl<>(stateClass);
-        registerStates(stateMachine, buildStates(stateMachine));
+        var states = buildStates(stateMachine);
+        stateMachine.states = buildStateMap(states);
         setInitialState(initialState, stateMachine);
         return stateMachine;
     }
@@ -78,19 +83,23 @@ public class StateMachineBuilder<S> {
 
     }
 
-    private void registerStates(StateMachineImpl<S> stateMachine, List<S> states) {
-        states.forEach(state -> registerState(stateMachine, state));
+    private Map<Class<? extends S>, S> buildStateMap(List<S> states) {
+
+        return states
+                .stream()
+                .peek(this::validateClass)
+                .peek(state -> log.debug("State<{}> registered at StateMachine<{}>",
+                        () -> state.getClass().getSimpleName(),
+                        stateClass::getSimpleName
+                ))
+                .collect(Collectors.toUnmodifiableMap(state -> {
+                            //noinspection unchecked
+                            return (Class<? extends S>) state.getClass();
+                        }, state -> state
+                ));
     }
 
-    private void registerState(StateMachineImpl<S> stateMachine, S state) {
-        validateClass(state);
-        //noinspection unchecked
-        Class<S> clazz = (Class<S>) state.getClass();
-        stateMachine.states.put(clazz, state);
-        log.debug("State<{}> registered at StateMachine<{}>", clazz::getSimpleName, stateClass::getSimpleName);
-    }
-
-    private void validateClass(S state) {
+    private void validateClass(@NonNull S state) {
         var c = state.getClass();
         if (c.isAnonymousClass()) {
             throw new IllegalArgumentException("Invalid class (Anonymous) %s".formatted(c));

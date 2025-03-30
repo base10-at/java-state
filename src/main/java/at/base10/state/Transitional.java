@@ -28,6 +28,7 @@ public abstract class Transitional<S>{
      * @param state the class of the new state
      * @return the updated state machine instance
      */
+    @SuppressWarnings("SameParameterValue")
     protected StateMachine<S> transitionToState(Class<? extends S> state) {
         return stateMachine.transitionToState(state);
     }

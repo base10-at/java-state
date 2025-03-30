@@ -5,8 +5,6 @@ import lombok.experimental.PackagePrivate;
 import lombok.extern.log4j.Log4j2;
 
 import java.lang.reflect.Proxy;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -17,7 +15,7 @@ class StateMachineImpl<S> implements StateMachine<S> {
 
     private final Class<S> stateClass;
 
-    final Map<Class<? extends S>, S> states = new HashMap<>();
+    Map<Class<? extends S>, S> states;
 
     @PackagePrivate
     S currentState;
@@ -37,7 +35,10 @@ class StateMachineImpl<S> implements StateMachine<S> {
         if (currentState == null) {
             throw new IllegalArgumentException("State " + state + " not found");
         }
-        log.trace("Transition: [{} => {}]", () -> previousState.getClass().getSimpleName(), state::getSimpleName);
+        log.debug("Transition: [{} => {}]",
+                () -> previousState.getClass().getSimpleName(),
+                state::getSimpleName
+        );
 
         return this;
     }
@@ -54,14 +55,6 @@ class StateMachineImpl<S> implements StateMachine<S> {
      * {@inheritDoc}
      */
     @Override
-    public Collection<S> states() {
-        return states.values();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public S asState() {
         return asState(stateClass);
     }
@@ -72,11 +65,7 @@ class StateMachineImpl<S> implements StateMachine<S> {
     @Override
     public <E> E asState(Class<E> state) {
         //noinspection unchecked
-        return (E) Proxy.newProxyInstance(
-                this.getClass().getClassLoader(),
-                new Class[]{state},
-                (p, method, args1) -> method.invoke(this.currentState(), args1)
-        );
+        return (E) Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[]{state}, (p, method, args1) -> method.invoke(this.currentState(), args1));
     }
 
 }

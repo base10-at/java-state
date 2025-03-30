@@ -1,7 +1,5 @@
 package at.base10.state;
 
-import java.util.Collection;
-
 /**
  * Represents a generic state machine that manages states of type {@code S}.
  *
@@ -34,13 +32,6 @@ public interface StateMachine<S> {
      * @return the current state
      */
     S currentState();
-
-    /**
-     * Retrieves all possible states within the state machine.
-     *
-     * @return a collection of all possible states
-     */
-    Collection<S> states();
 
     /**
      * Returns the current state as a proxy instance.

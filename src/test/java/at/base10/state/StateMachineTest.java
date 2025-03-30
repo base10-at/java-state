@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -251,16 +250,5 @@ class StateMachineTest {
                     () -> stateMachine.transitionToState(null));
         }
 
-        @Test
-        public void test_states() {
-            assertEquals(
-                    Set.of(
-                            StateTransit.class,
-                            StateInc.class,
-                            StateSquare.class
-                    ),
-                    stateMachine.states().stream()
-                            .map(AppState::getClass).collect(Collectors.toSet()));
-        }
     }
 }

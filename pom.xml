@@ -120,6 +120,11 @@
                         <mutator>ALL</mutator>
                         <mutator>EXPERIMENTAL_MEMBER_VARIABLE</mutator>
                     </mutators>
+                    <maxSurviving>0</maxSurviving>
+                    <avoidCallsTo>
+                        <avoidCallsTo>org.apache.logging.log4j</avoidCallsTo>
+                        <avoidCallsTo>java.lang.Class</avoidCallsTo>
+                    </avoidCallsTo>
 
                 </configuration>
 
