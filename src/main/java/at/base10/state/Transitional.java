@@ -6,7 +6,7 @@ package at.base10.state;
  *
  * @param <S> the type representing the states in the state machine
  */
-public abstract class Transitional<S> implements State<S> {
+public abstract class Transitional<S>{
 
     /**
      * The state machine associated with this state.
@@ -28,8 +28,7 @@ public abstract class Transitional<S> implements State<S> {
      * @param state the class of the new state
      * @return the updated state machine instance
      */
-    @Override
-    public StateMachine<S> transition(Class<? extends S> state) {
-        return stateMachine.transition(state);
+    protected StateMachine<S> transitionToState(Class<? extends S> state) {
+        return stateMachine.transitionToState(state);
     }
 }
