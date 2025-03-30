@@ -27,7 +27,7 @@ class StateMachineTest {
         }
     }
 
-    public static final class StateSquare extends Transitional<AppState> implements AppState {
+    public static final class StateSquare extends TransitionalState<AppState> implements AppState {
         private final SquareFunction dummy;
 
         public StateSquare(SquareFunction dummy, StateMachine<AppState> stateMachine) {
@@ -52,7 +52,7 @@ class StateMachineTest {
         }
     }
 
-    public static final class StateTransit extends Transitional<AppState> implements AppState {
+    public static final class StateTransit extends TransitionalState<AppState> implements AppState {
 
 
         public StateTransit(StateMachine<AppState> stateMachine) {
