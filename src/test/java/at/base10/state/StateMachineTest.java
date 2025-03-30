@@ -62,7 +62,7 @@ class StateMachineTest {
 
         @Override
         public int execute(int number) {
-            return this.transition(StateInc.class).state().execute(number);
+            return this.transitionToState(StateInc.class).currentState().execute(number);
         }
     }
 
@@ -153,7 +153,7 @@ class StateMachineTest {
         var stateMachine = StateMachine.builder(AppState.class)
                 .register(StateTransit::new)
                 .build(StateTransit.class);
-        assertInstanceOf(StateTransit.class, stateMachine.state());
+        assertInstanceOf(StateTransit.class, stateMachine.currentState());
     }
 
     @Test
@@ -176,7 +176,7 @@ class StateMachineTest {
                                 .register(sm -> new StateSquare(new SquareFunction(), sm))
                                 .register(sm -> new StateInc())
                                 .build(StateInc.class)
-                                .transition(StateTransit.class)
+                                .transitionToState(StateTransit.class)
                 ).getMessage(),
                 Matchers.equalTo("State class at.base10.state.StateMachineTest$StateTransit not found")
         );
@@ -188,9 +188,9 @@ class StateMachineTest {
         StateMachine<Operate> stateMachine = StateMachine.builder(Operate.class)
                 .register(sm -> new StateInc())
                 .build(StateInc.class);
-        var proxy = stateMachine.asProxy();
+        var proxy = stateMachine.asState();
         assertEquals(3, proxy.execute(2));
-        assertInstanceOf(StateInc.class, stateMachine.state());
+        assertInstanceOf(StateInc.class, stateMachine.currentState());
         assertInstanceOf(Operate.class, proxy);
     }
 
@@ -218,37 +218,37 @@ class StateMachineTest {
 
         @Test
         public void test_initialState() {
-            assertInstanceOf(StateTransit.class, stateMachine.state());
+            assertInstanceOf(StateTransit.class, stateMachine.currentState());
         }
 
         @Test
         public void test_transition() {
-            assertInstanceOf(StateTransit.class, stateMachine.state());
-            stateMachine.transition(StateInc.class);
-            assertInstanceOf(StateInc.class, stateMachine.state());
+            assertInstanceOf(StateTransit.class, stateMachine.currentState());
+            stateMachine.transitionToState(StateInc.class);
+            assertInstanceOf(StateInc.class, stateMachine.currentState());
         }
 
         @Test
         public void proxy() {
-            var proxy = stateMachine.asProxy(Operate.class);
-            assertInstanceOf(StateTransit.class, stateMachine.state());
+            var proxy = stateMachine.asState(Operate.class);
+            assertInstanceOf(StateTransit.class, stateMachine.currentState());
             assertEquals(3, proxy.execute(2));
-            assertInstanceOf(StateInc.class, stateMachine.state());
+            assertInstanceOf(StateInc.class, stateMachine.currentState());
             assertInstanceOf(Operate.class, proxy);
         }
 
         @Test
         public void test_transitional() {
-            assertInstanceOf(StateTransit.class, stateMachine.state());
-            assertEquals(3, stateMachine.state().execute(2));
-            assertInstanceOf(StateInc.class, stateMachine.state());
+            assertInstanceOf(StateTransit.class, stateMachine.currentState());
+            assertEquals(3, stateMachine.currentState().execute(2));
+            assertInstanceOf(StateInc.class, stateMachine.currentState());
         }
 
         @Test
         public void test_transition_to_null() {
-            assertInstanceOf(StateTransit.class, stateMachine.state());
+            assertInstanceOf(StateTransit.class, stateMachine.currentState());
             assertThrows(NullPointerException.class,
-                    () -> stateMachine.transition(null));
+                    () -> stateMachine.transitionToState(null));
         }
 
         @Test

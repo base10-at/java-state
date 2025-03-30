@@ -31,7 +31,7 @@ class StateMachineImpl<S> implements StateMachine<S> {
      * {@inheritDoc}
      */
     @Override
-    public StateMachine<S> transition(@NonNull Class<? extends S> state) {
+    public StateMachine<S> transitionToState(@NonNull Class<? extends S> state) {
         var previousState = currentState;
         currentState = states.get(state);
         if (currentState == null) {
@@ -46,7 +46,7 @@ class StateMachineImpl<S> implements StateMachine<S> {
      * {@inheritDoc}
      */
     @Override
-    public S state() {
+    public S currentState() {
         return currentState;
     }
 
@@ -62,20 +62,20 @@ class StateMachineImpl<S> implements StateMachine<S> {
      * {@inheritDoc}
      */
     @Override
-    public S asProxy() {
-        return asProxy(stateClass);
+    public S asState() {
+        return asState(stateClass);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public <E> E asProxy(Class<E> state) {
+    public <E> E asState(Class<E> state) {
         //noinspection unchecked
         return (E) Proxy.newProxyInstance(
                 this.getClass().getClassLoader(),
                 new Class[]{state},
-                (p, method, args1) -> method.invoke(this.state(), args1)
+                (p, method, args1) -> method.invoke(this.currentState(), args1)
         );
     }
 

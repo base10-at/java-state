@@ -26,14 +26,14 @@ public interface StateMachine<S> {
      * @param state the class of the new state
      * @return the updated state machine
      */
-    StateMachine<S> transition(Class<? extends S> state);
+    StateMachine<S> transitionToState(Class<? extends S> state);
 
     /**
      * Retrieves the current state of the state machine.
      *
      * @return the current state
      */
-    S state();
+    S currentState();
 
     /**
      * Retrieves all possible states within the state machine.
@@ -47,7 +47,7 @@ public interface StateMachine<S> {
      *
      * @return the proxy representation of the current state
      */
-    S asProxy();
+    S asState();
 
     /**
      * Returns the current state as a proxy instance of the specified type.
@@ -56,5 +56,5 @@ public interface StateMachine<S> {
      * @param state the class of the proxy interface
      * @return the proxy representation of the state as the specified type
      */
-    <E> E asProxy(Class<E> state);
+    <E> E asState(Class<E> state);
 }
