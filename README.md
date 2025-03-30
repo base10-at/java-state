@@ -35,9 +35,16 @@ Define states and build a state machine using `StateMachineBuilder`:
 ```java
 import at.base10.state.*;
 
-interface AppState {}
-class ConcreteState implements AppState{}
-class AnotherState implements AppState{}
+interface AppState {
+        void execute();
+        // more methods to handle operations
+}
+class ConcreteState implements AppState{
+    //... implement state logic here
+}
+class AnotherState implements AppState{
+    //... implement state logic here
+}
 
 public class Example {
     public static void main(String[] args) {
@@ -53,14 +60,90 @@ public class Example {
 
 ### Transitioning Between States
 ```java
-stateMachine.transitionToState(AnotherState.class);
+public void doStuff(StateMachine<AppState> stateMachine){
+    // ... 
+    stateMachine.transitionToState(AnotherState.class);
+}
 ```
+
+
+### Make States aware of the Context
+
+```java
+
+import at.base10.state.StateMachine;
+import at.base10.state.TransitionalState;
+
+interface AppState {
+    void execute();
+}
+
+class ConcreteState extends TransitionalState<AppState> implements AppState {
+    ConcreteState(StateMachine<AppState> stateMachine) {
+        super(stateMachine);
+    }
+
+    public void execute() {
+        // ... 
+        this.transitionToState(AnotherState.class);
+    }
+}
+```
+
+
+### create a proxy for the current state
+
+```java
+import at.base10.state.ContextAwareState;
+import at.base10.state.StateMachine;
+
+interface AppState {
+    void execute();
+}
+
+/**
+ * this is not an actual state of the StateMachine, but rather a proxy acting as the current state
+ */
+class ProxyState extends ContextAwareState<AppState> implements AppState {
+    ProxyState(StateMachine<AppState> stateMachine) {
+        super(stateMachine);
+    }
+    
+    public void execute() {
+        this.stateMachine.currentState().execute();
+    }
+}
+
+public AppState getProxy(StateMachine<AppState> stateMachine){
+    return new ProxyState(stateMachine);
+}
+```
+
+### Create generic a proxy for the current state
+This uses reflection and is slightly less performant, but very convenient, 
+since you do not have to create our proxy class or care about initialization.
+
+```java
+
+import at.base10.state.StateMachine;
+interface AppState {
+    void execute();
+}
+public AppState getGenericProxy(StateMachine<AppState> stateMachine){
+    // ... 
+    return stateMachine.asState(AppState.class);
+}
+```
+
+
+
 
 ## Classes and Interfaces
 - **`StateFactory<S>`**: Factory interface for creating state instances.
 - **`StateMachine<S>`**: Manages states and transitions.
 - **`StateMachineBuilder<S>`**: Builds a state machine.
 - **`Transitional<S>`**: Base class for states that support transitions.
+- **`ContextAwareState<S>`**: Base class for states that are aware of their associated state machine.
 
 ## Documentation
 For more details, visit the official Javadoc:
