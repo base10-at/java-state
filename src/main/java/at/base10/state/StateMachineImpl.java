@@ -20,7 +20,6 @@ class StateMachineImpl<S> implements StateMachine<S> {
     @PackagePrivate
     S currentState;
 
-
     StateMachineImpl(Class<S> stateClass) {
         this.stateClass = stateClass;
     }
@@ -65,7 +64,11 @@ class StateMachineImpl<S> implements StateMachine<S> {
     @Override
     public <E> E asState(Class<E> state) {
         //noinspection unchecked
-        return (E) Proxy.newProxyInstance(this.getClass().getClassLoader(), new Class[]{state}, (p, method, args1) -> method.invoke(this.currentState(), args1));
+        return (E) Proxy.newProxyInstance(
+                getClass().getClassLoader(),
+                new Class[]{state},
+                (p, method, args1) -> method.invoke(this.currentState(), args1)
+        );
     }
 
 }
