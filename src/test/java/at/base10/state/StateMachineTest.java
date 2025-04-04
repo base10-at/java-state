@@ -1,11 +1,16 @@
 package at.base10.state;
 
+import at.base10.state.observer.Observer;
+import at.base10.state.observer.StateChangeEvent;
+import at.base10.state.observer.Subscription;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -168,6 +173,18 @@ class StateMachineTest {
     }
 
     @Test
+    public void testRegisterNullState() {
+        assertThat(
+                assertThrows(NullPointerException.class,
+                        () -> StateMachine.builder(AppState.class)
+                                .register(sm -> new StateInc())
+                                .register(sm -> null)
+                                .build(StateInc.class)).getMessage(),
+                Matchers.equalTo("state is marked non-null but is null")
+        );
+    }
+
+    @Test
     public void testInvalidTransitionState() {
         assertThat(
                 assertThrows(IllegalArgumentException.class,
@@ -191,6 +208,19 @@ class StateMachineTest {
         assertEquals(3, proxy.execute(2));
         assertInstanceOf(StateInc.class, stateMachine.currentState());
         assertInstanceOf(Operate.class, proxy);
+    }
+
+
+    @Test
+    public void registerNullCollection() {
+        //noinspection DataFlowIssue
+        assertThat(
+                assertThrows(NullPointerException.class,
+                        () -> StateMachine.builder(Operate.class)
+                                .register((Collection<StateFactory<Operate>>) null)
+                ).getMessage(),
+                Matchers.equalTo("stateBuilders is marked non-null but is null")
+        );
     }
 
 
@@ -248,6 +278,143 @@ class StateMachineTest {
             assertInstanceOf(StateTransit.class, stateMachine.currentState());
             assertThrows(NullPointerException.class,
                     () -> stateMachine.transitionToState(null));
+        }
+
+        @Test
+        public void test_transition_Observers() {
+
+            var obs1 = new Observer<AppState>() {
+                public StateChangeEvent<AppState> event = null;
+
+                @Override
+                public void next(StateChangeEvent<AppState> stateChangedEvent) {
+                    event = stateChangedEvent;
+                }
+            };
+
+            var obs2 = new Observer<AppState>() {
+                public StateChangeEvent<AppState> event = null;
+
+                @Override
+                public void next(StateChangeEvent<AppState> stateChangedEvent) {
+                    event = stateChangedEvent;
+                }
+            };
+
+            stateMachine.registerObserver(obs1);
+            stateMachine.registerObserver(obs2);
+
+            assertNull(obs1.event);
+            assertNull(obs2.event);
+
+            AppState first;
+            AppState seccond;
+
+            first = stateMachine.currentState();
+            stateMachine.transitionToState(StateSquare.class);
+            seccond = stateMachine.currentState();
+
+            assertEquals(new StateChangeEvent<>(first, seccond), obs1.event);
+            assertEquals(new StateChangeEvent<>(first, seccond), obs2.event);
+        }
+
+        @Test
+        public void test_unsubscribe() {
+
+            var obs1 = new Observer<AppState>() {
+                public StateChangeEvent<AppState> event = null;
+
+                @Override
+                public void next(StateChangeEvent<AppState> stateChangedEvent) {
+                    event = stateChangedEvent;
+                }
+            };
+
+            var subscription = stateMachine.registerObserver(obs1);
+
+
+            assertNull(obs1.event);
+
+            AppState first;
+            AppState seccond;
+            AppState third;
+
+            first = stateMachine.currentState();
+            stateMachine.transitionToState(StateInc.class);
+            seccond = stateMachine.currentState();
+
+            assertEquals(new StateChangeEvent<>(first, seccond), obs1.event);
+
+            assertTrue(subscription.unsubscribe());
+            assertFalse(subscription.unsubscribe());
+
+            stateMachine.transitionToState(StateSquare.class);
+            third = stateMachine.currentState();
+
+            assertNotEquals(first, seccond);
+            assertNotEquals(seccond, third);
+            assertNotEquals(first, third);
+            assertEquals(new StateChangeEvent<>(first, seccond), obs1.event);
+        }
+
+        @Test
+        public void test_registerObserver() {
+
+            var obs1 = new Observer<AppState>() {
+                public StateChangeEvent<AppState> event = null;
+
+                @Override
+                public void next(StateChangeEvent<AppState> stateChangedEvent) {
+                    event = stateChangedEvent;
+                }
+            };
+
+            stateMachine.registerObserver(obs1);
+
+
+            assertNull(obs1.event);
+
+            AppState first;
+            AppState seccond;
+            AppState third;
+
+            first = stateMachine.currentState();
+            stateMachine.transitionToState(StateInc.class);
+            seccond = stateMachine.currentState();
+
+            assertEquals(new StateChangeEvent<>(first, seccond), obs1.event);
+
+            assertTrue(stateMachine.unregisterObserver(obs1));
+            assertFalse(stateMachine.unregisterObserver(obs1));
+
+            stateMachine.transitionToState(StateSquare.class);
+            third = stateMachine.currentState();
+
+            assertNotEquals(first, seccond);
+            assertNotEquals(seccond, third);
+            assertNotEquals(first, third);
+            assertEquals(new StateChangeEvent<>(first, seccond), obs1.event);
+        }
+
+        @Test
+        public void test_resubscribe() {
+
+            var obs1 = new Observer<AppState>() {
+                public final List<StateChangeEvent<AppState>> event = new ArrayList<>();
+
+                @Override
+                public void next(StateChangeEvent<AppState> stateChangedEvent) {
+                    event.add(stateChangedEvent);
+                }
+            };
+
+
+            assertInstanceOf(Subscription.class, stateMachine.registerObserver(obs1));
+            assertNull(stateMachine.registerObserver(obs1));
+
+            assertEquals(0, obs1.event.size());
+            stateMachine.transitionToState(StateSquare.class);
+            assertEquals(1, obs1.event.size());
         }
 
     }

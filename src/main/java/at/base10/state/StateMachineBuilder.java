@@ -80,7 +80,6 @@ public class StateMachineBuilder<S> {
         return statesBuilders.stream()
                 .map(e -> e.build(stateMachine))
                 .toList();
-
     }
 
     private Map<Class<? extends S>, S> buildStateMap(List<S> states) {

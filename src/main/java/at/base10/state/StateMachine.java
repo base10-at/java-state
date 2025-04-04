@@ -1,5 +1,8 @@
 package at.base10.state;
 
+import at.base10.state.observer.Observer;
+import at.base10.state.observer.Subscription;
+
 /**
  * Represents a generic state machine that manages states of type {@code S}.
  *
@@ -48,4 +51,8 @@ public interface StateMachine<S> {
      * @return the proxy representation of the state as the specified type
      */
     <E> E asState(Class<E> state);
+
+    Subscription<S> registerObserver(Observer<S> observer);
+
+    boolean unregisterObserver(Observer<S> observer);
 }

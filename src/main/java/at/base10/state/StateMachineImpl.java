@@ -1,11 +1,16 @@
 package at.base10.state;
 
+import at.base10.state.observer.Observer;
+import at.base10.state.observer.StateChangeEvent;
+import at.base10.state.observer.Subscription;
 import lombok.NonNull;
 import lombok.experimental.PackagePrivate;
 import lombok.extern.log4j.Log4j2;
 
 import java.lang.reflect.Proxy;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * {@inheritDoc}
@@ -15,10 +20,13 @@ class StateMachineImpl<S> implements StateMachine<S> {
 
     private final Class<S> stateClass;
 
+    @PackagePrivate
     Map<Class<? extends S>, S> states;
 
     @PackagePrivate
     S currentState;
+
+    private final Set<Observer<S>> observers = new HashSet<>();
 
     StateMachineImpl(Class<S> stateClass) {
         this.stateClass = stateClass;
@@ -29,17 +37,25 @@ class StateMachineImpl<S> implements StateMachine<S> {
      */
     @Override
     public StateMachine<S> transitionToState(@NonNull Class<? extends S> state) {
-        var previousState = currentState;
+        S previousState = currentState;
+
         currentState = states.get(state);
         if (currentState == null) {
             throw new IllegalArgumentException("State " + state + " not found");
         }
+
+        var stateChangedEvent = new StateChangeEvent<>(previousState, currentState);
+        notifyObservers(stateChangedEvent);
         log.debug("Transition: [{} => {}]",
-                () -> previousState.getClass().getSimpleName(),
-                state::getSimpleName
+                () -> stateChangedEvent.previous().getClass().getSimpleName(),
+                () -> stateChangedEvent.current().getClass().getSimpleName()
         );
 
         return this;
+    }
+
+    private void notifyObservers(StateChangeEvent<S> observable) {
+        observers.forEach(observer -> observer.next(observable));
     }
 
     /**
@@ -69,6 +85,17 @@ class StateMachineImpl<S> implements StateMachine<S> {
                 new Class[]{state},
                 (p, method, args1) -> method.invoke(this.currentState(), args1)
         );
+    }
+
+    @Override
+    public Subscription<S> registerObserver(Observer<S> observer) {
+        return this.observers.add(observer)
+                ? new Subscription<>(this, observer)
+                : null;
+    }
+
+    public boolean unregisterObserver(Observer<S> observer) {
+        return this.observers.remove(observer);
     }
 
 }
