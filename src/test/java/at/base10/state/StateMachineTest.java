@@ -408,9 +408,9 @@ class StateMachineTest {
                 }
             };
 
-
-            assertInstanceOf(Subscription.class, stateMachine.registerObserver(obs1));
-            assertNull(stateMachine.registerObserver(obs1));
+            var sub = stateMachine.registerObserver(obs1);
+            assertInstanceOf(Subscription.class, sub);
+            assertSame(sub, stateMachine.registerObserver(obs1));
 
             assertEquals(0, obs1.event.size());
             stateMachine.transitionToState(StateSquare.class);

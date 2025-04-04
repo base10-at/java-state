@@ -52,7 +52,19 @@ public interface StateMachine<S> {
      */
     <E> E asState(Class<E> state);
 
+    /**
+     * Registers an observer to listen for state changes in the state machine.
+     *
+     * @param observer the observer to register
+     * @return a {@link Subscription} that can be used to unsubscribe the observer
+     */
     Subscription<S> registerObserver(Observer<S> observer);
 
+    /**
+     * Unregisters a previously registered observer from the state machine.
+     *
+     * @param observer the observer to unregister
+     * @return true if the observer was successfully unregistered, false otherwise
+     */
     boolean unregisterObserver(Observer<S> observer);
 }

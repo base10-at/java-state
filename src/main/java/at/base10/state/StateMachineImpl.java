@@ -8,9 +8,8 @@ import lombok.experimental.PackagePrivate;
 import lombok.extern.log4j.Log4j2;
 
 import java.lang.reflect.Proxy;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * {@inheritDoc}
@@ -26,7 +25,7 @@ class StateMachineImpl<S> implements StateMachine<S> {
     @PackagePrivate
     S currentState;
 
-    private final Set<Observer<S>> observers = new HashSet<>();
+    private final Map<Observer<S>, Subscription<S>> subscriptions = new HashMap<>();
 
     StateMachineImpl(Class<S> stateClass) {
         this.stateClass = stateClass;
@@ -54,8 +53,8 @@ class StateMachineImpl<S> implements StateMachine<S> {
         return this;
     }
 
-    private void notifyObservers(StateChangeEvent<S> observable) {
-        observers.forEach(observer -> observer.next(observable));
+    private void notifyObservers(StateChangeEvent<S> stateChangeEvent) {
+        subscriptions.keySet().forEach(observer -> observer.next(stateChangeEvent));
     }
 
     /**
@@ -87,15 +86,22 @@ class StateMachineImpl<S> implements StateMachine<S> {
         );
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Subscription<S> registerObserver(Observer<S> observer) {
-        return this.observers.add(observer)
-                ? new Subscription<>(this, observer)
-                : null;
+        return subscriptions.computeIfAbsent(
+                observer,
+                k -> new Subscription<>(this, observer)
+        );
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public boolean unregisterObserver(Observer<S> observer) {
-        return this.observers.remove(observer);
+        return this.subscriptions.remove(observer) != null;
     }
 
 }
