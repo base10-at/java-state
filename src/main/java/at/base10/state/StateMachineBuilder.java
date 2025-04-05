@@ -6,8 +6,6 @@ import lombok.extern.log4j.Log4j2;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * A builder class for constructing instances of {@link StateMachine}.
@@ -61,41 +59,20 @@ public class StateMachineBuilder<S> {
      */
     public StateMachine<S> build(@NonNull Class<? extends S> initialState) {
         StateMachineImpl<S> stateMachine = new StateMachineImpl<>(stateClass);
-        var states = buildStates(stateMachine);
-        stateMachine.states = buildStateMap(states);
+
+        buildStates(stateMachine)
+                .stream()
+                .peek(this::validateClass)
+                .forEach(stateMachine::addState);
+
         setInitialState(initialState, stateMachine);
         return stateMachine;
     }
-
-    private static <S> void setInitialState(Class<? extends S> initialState,
-                                            StateMachineImpl<S> stateMachine) {
-        stateMachine.currentState = stateMachine.states.get(initialState);
-        if (stateMachine.currentState == null) {
-            throw new IllegalArgumentException("State " + initialState + " not found");
-        }
-    }
-
 
     private List<S> buildStates(StateMachineImpl<S> stateMachine) {
         return statesBuilders.stream()
                 .map(e -> e.build(stateMachine))
                 .toList();
-    }
-
-    private Map<Class<? extends S>, S> buildStateMap(List<S> states) {
-
-        return states
-                .stream()
-                .peek(this::validateClass)
-                .peek(state -> log.debug("State<{}> registered at StateMachine<{}>",
-                        () -> state.getClass().getSimpleName(),
-                        stateClass::getSimpleName
-                ))
-                .collect(Collectors.toUnmodifiableMap(state -> {
-                            //noinspection unchecked
-                            return (Class<? extends S>) state.getClass();
-                        }, state -> state
-                ));
     }
 
     private void validateClass(@NonNull S state) {
@@ -106,4 +83,14 @@ public class StateMachineBuilder<S> {
             throw new IllegalArgumentException("Invalid class (Synthetic) %s".formatted(c));
         }
     }
+
+    private static <S> void setInitialState(Class<? extends S> initialState,
+                                            StateMachineImpl<S> stateMachine) {
+        var state = stateMachine.getStates().get(initialState);
+        if (state == null) {
+            throw new IllegalArgumentException("State " + initialState + " not found");
+        }
+        stateMachine.setCurrentState(state);
+    }
+
 }

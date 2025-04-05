@@ -3,7 +3,9 @@ package at.base10.state;
 import at.base10.state.observer.Observer;
 import at.base10.state.observer.StateChangeEvent;
 import at.base10.state.observer.Subscription;
+import lombok.Getter;
 import lombok.NonNull;
+import lombok.Setter;
 import lombok.experimental.PackagePrivate;
 import lombok.extern.log4j.Log4j2;
 
@@ -19,11 +21,12 @@ class StateMachineImpl<S> implements StateMachine<S> {
 
     private final Class<S> stateClass;
 
-    @PackagePrivate
-    Map<Class<? extends S>, S> states;
+    @Getter
+    private final Map<Class<? extends S>, S> states = new HashMap<>();
 
     @PackagePrivate
-    S currentState;
+    @Setter
+    private S currentState;
 
     private final Map<Observer<S>, Subscription<S>> subscriptions = new HashMap<>();
 
@@ -36,18 +39,20 @@ class StateMachineImpl<S> implements StateMachine<S> {
      */
     @Override
     public StateMachine<S> transitionToState(@NonNull Class<? extends S> state) {
-        S previousState = currentState;
+        var previousState = currentState;
+        var nextState = states.get(state);
 
-        currentState = states.get(state);
-        if (currentState == null) {
+        if (nextState == null) {
             throw new IllegalArgumentException("State " + state + " not found");
         }
 
+        currentState = nextState;
         var stateChangedEvent = new StateChangeEvent<>(previousState, currentState);
         notifyObservers(stateChangedEvent);
+
         log.debug("Transition: [{} => {}]",
-                () -> stateChangedEvent.previous().getClass().getSimpleName(),
-                () -> stateChangedEvent.current().getClass().getSimpleName()
+                () -> previousState.getClass().getSimpleName(),
+                () -> nextState.getClass().getSimpleName()
         );
 
         return this;
@@ -55,6 +60,12 @@ class StateMachineImpl<S> implements StateMachine<S> {
 
     private void notifyObservers(StateChangeEvent<S> stateChangeEvent) {
         subscriptions.keySet().forEach(observer -> observer.next(stateChangeEvent));
+    }
+
+
+    public void addState(S state) {
+        //noinspection unchecked
+        states.put((Class<? extends S>) state.getClass(), state);
     }
 
     /**

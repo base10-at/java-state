@@ -46,6 +46,10 @@ class StateMachineTest {
             return dummy.calculate(number);
         }
 
+        @Override
+        public String toString() {
+            return "Square";
+        }
     }
 
     public static final class StateInc implements AppState {
@@ -54,6 +58,11 @@ class StateMachineTest {
         @Override
         public int execute(int number) {
             return number + 1;
+        }
+
+        @Override
+        public String toString() {
+            return "Inc";
         }
     }
 
@@ -67,6 +76,11 @@ class StateMachineTest {
         @Override
         public int execute(int number) {
             return this.transitionToState(StateInc.class).currentState().execute(number);
+        }
+
+        @Override
+        public String toString() {
+            return "Transit";
         }
     }
 
